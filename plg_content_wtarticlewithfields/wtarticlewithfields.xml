@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="content" method="upgrade">
+  <name>PLG_WTARTICLEWITHFIELDS</name>
+  <author>Sergey Tolkachyov</author>
+  <creationDate>18/07/2023</creationDate>
+  <copyright>Copyright (C) 2019-2023. All rights reserved.</copyright>
+  <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
+  <authorEmail>info@web-tolk.ru</authorEmail>
+  <authorUrl>https://web-tolk.ru</authorUrl>
+  <version>2.0.0</version>
+  <description>PLG_WTARTICLEWITHFIELDS_DESC</description>
+  <namespace path="src">Joomla\Plugin\Content\Wtarticlewithfields</namespace>
+  <files>
+    <folder>language</folder>
+    <folder>services</folder>
+    <folder plugin="wtarticlewithfields">src</folder>
+    <folder>tmpl</folder>
+    <filename>wtarticlewithfields.xml</filename>
+  </files>
+  <languages folder="language" client="administrator">
+    <language tag="en-GB">en-GB/plg_content_wtarticlewithfields.sys.ini</language>
+    <language tag="ru-RU">ru-RU/plg_content_wtarticlewithfields.sys.ini</language>
+  </languages>
+  <config>
+    <fields name="params">
+      <fieldset name="basic">
+        <field
+                addfieldprefix="Joomla\Plugin\Content\Wtarticlewithfields\Fields"
+                type="plugininfo"
+                name="plugininfo"/>
+      </fieldset>
+    </fields>
+  </config>
+</extension>
