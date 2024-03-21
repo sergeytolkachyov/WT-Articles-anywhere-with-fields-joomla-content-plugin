@@ -1,8 +1,11 @@
 <?php
 /**
- *  @package   WT AmoCRM Radical Form
- *  @copyright Copyright Sergey Tolkachyov
- *  @license   GNU General Public License version 3, or later
+ * @package       WT Articles anywhere with fields
+ * @version       2.0.1
+ * @Author        Sergey Tolkachyov, https://web-tolk.ru
+ * @copyright     Copyright (C) 2024 Sergey Tolkachyov
+ * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
+ * @since         1.0.0
  */
 
 defined('_JEXEC') || die;

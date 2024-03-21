@@ -1,10 +1,10 @@
 /**
- * @package     WT JShopping products anywhere
- * @copyright   Copyright (C) 2021-2023 Sergey Tolkachyov. All rights reserved.
- * @author      Sergey Tolkachyov - https://web-tolk.ru
- * @link 		https://web-tolk.ru
- * @version 	2.0.0
- * @license     GNU General Public License version 3 or later
+ * @package       WT Articles anywhere with fields
+ * @version       2.0.1
+ * @Author        Sergey Tolkachyov, https://web-tolk.ru
+ * @copyright     Copyright (C) 2024 Sergey Tolkachyov
+ * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
+ * @since         1.0.0
  */
 (() => {
     document.addEventListener('DOMContentLoaded', () => {

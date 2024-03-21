@@ -1,151 +1,218 @@
 <?php
-// No direct access to this file
-defined('_JEXEC') or die('Restricted access');
+/**
+ * @package       WT Articles anywhere with fields
+ * @version       2.0.1
+ * @Author        Sergey Tolkachyov, https://web-tolk.ru
+ * @copyright     Copyright (C) 2024 Sergey Tolkachyov
+ * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
+ * @since         1.0.0
+ */
+
+\defined('_JEXEC') or die;
+
+use Joomla\CMS\Application\AdministratorApplication;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Installer\Installer;
-use Joomla\CMS\Installer\InstallerHelper;
+use Joomla\CMS\Installer\InstallerAdapter;
+use Joomla\CMS\Installer\InstallerScriptInterface;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Plugin\PluginHelper;
+use Joomla\Database\DatabaseDriver;
+use Joomla\DI\Container;
+use Joomla\DI\ServiceProviderInterface;
 use Joomla\CMS\Version;
-use Joomla\Database\DatabaseInterface;
-use Joomla\CMS\Uri\Uri;
 
-class Pkg_pkgwtarticlewithfieldsInstallerScript extends \Joomla\CMS\Installer\InstallerScript
-{
-	
-		
-    /**
-     * Runs just before any installation action is performed on the component.
-     * Verifications and pre-requisites should run in this function.
-     *
-     * @param  string    $type   - Type of PreFlight action. Possible values are:
-     *                           - * install
-     *                           - * update
-     *                           - * discover_install
-     * @param  \stdClass $installer - Parent object calling object.
-     *
-     * @return void
-     */
-    public function preflight($type, $installer)
-    {
+return new class () implements ServiceProviderInterface {
+	public function register(Container $container)
+	{
+		$container->set(InstallerScriptInterface::class, new class ($container->get(AdministratorApplication::class)) implements InstallerScriptInterface {
 
-		if ((new Version())->isCompatible('4.3.0') === false){
-			Factory::getApplication()->enqueueMessage('<strong>WT Articles anywhere with fields plugin:</strong> This package version works only under Joomla <strong>4.3.+</strong>. For Joomla 3 please <a href=\"https://web-tolk.ru/dev/joomla-plugins/wt-articles-anywhere-with-fields?from='.(Uri::getInstance())->getHost().'\" target=\"_blank\">download version 1.0.1.</a>','error');
-			return false;
-		}
-		
-		
-    }
-	
-    /**
-     * This method is called after a component is installed.
-     *
-     * @param  \stdClass $installer - Parent object calling this method.
-     *
-     * @return void
-     */
-    public function install($installer)
-    {
-		
-    }
+			/**
+			 * The application object
+			 *
+			 * @var  AdministratorApplication
+			 *
+			 * @since  1.0.0
+			 */
+			protected AdministratorApplication $app;
 
-    /**
-     * This method is called after a component is uninstalled.
-     *
-     * @param  \stdClass $installer - Parent object calling this method.
-     *
-     * @return void
-     */
-    public function uninstall($installer) 
-    {
+			/**
+			 * The Database object.
+			 *
+			 * @var   DatabaseDriver
+			 *
+			 * @since  1.0.0
+			 */
+			protected DatabaseDriver $db;
 
-		
-    }
+			/**
+			 * Minimum Joomla version required to install the extension.
+			 *
+			 * @var  string
+			 *
+			 * @since  1.0.0
+			 */
+			protected string $minimumJoomla = '5.0.0';
 
-    /**
-     * This method is called after a component is updated.
-     *
-     * @param  \stdClass $installer - Parent object calling object.
-     *
-     * @return void
-     */
-    public function update($installer) 
-    {
-		
-		
-    }
+			/**
+			 * Minimum PHP version required to install the extension.
+			 *
+			 * @var  string
+			 *
+			 * @since  1.0.0
+			 */
+			protected string $minimumPhp = '8.1';
 
-	
+			/**
+			 * Constructor.
+			 *
+			 * @param   AdministratorApplication  $app  The application object.
+			 *
+			 * @since 1.0.0
+			 */
+			public function __construct(AdministratorApplication $app)
+			{
+				$this->app = $app;
+				$this->db  = Factory::getContainer()->get('DatabaseDriver');
+			}
 
+			/**
+			 * This method is called after a component is installed.
+			 *
+			 * @param   \stdClass  $installer  - Parent object calling this method.
+			 *
+			 * @return void
+			 */
+			public function install(InstallerAdapter $adapter): bool
+			{
 
-    /**
-     * Runs right after any installation action is performed on the component.
-     *
-     * @param  string    $type   - Type of PostFlight action. Possible values are:
-     *                           - * install
-     *                           - * update
-     *                           - * discover_install
-     * @param  \stdClass $installer - Parent object calling object.
-     *
-     * @return void
-     */
-    function postflight($type, $installer)
-    {
-		if($type == 'install' || $type == 'update')
-		{
-			$db = Factory::getContainer()->get(DatabaseInterface::class);
-			$object = new stdClass();
-			$object->element = 'wtarticlewithfields'; 
-			$object->type = 'plugin';
-			$object->folder = 'content';
-			$object->enabled = 1;
-			
-			$result = $db->updateObject('#__extensions', $object, 'element');
-			
-			$object2 = new stdClass();
-			$object2->element = 'wtarticlewithfieldseditorxtd';
-			$object2->type = 'plugin';
-			$object2->folder = 'editors-xtd';
-			$object2->enabled = 1;
-			
-			$result = $db->updateObject('#__extensions', $object2, 'element');
-		}
-		
-	    $smile = '';
-	    if($type != 'uninstall')
-	    {
-		    $smiles    = ['&#9786;', '&#128512;', '&#128521;', '&#128525;', '&#128526;', '&#128522;', '&#128591;'];
-		    $smile_key = array_rand($smiles, 1);
-		    $smile     = $smiles[$smile_key];
-	    } else {
-			$smile = ':(';
-		}
+				return true;
 
-	    $element = strtoupper($installer->getElement());
-		echo "
-		<div class='row bg-white m-3 p-3 shadow-sm border'>
-		<div class='col-12 col-lg-8'>
-		<h2>".$smile." ".Text::_($element."_AFTER_".strtoupper($type))." <br/>".Text::_($element)."</h2>
-		".Text::_($element."_DESC");
-		
-		
-			echo Text::_($element."_WHATS_NEW");
+			}
 
-		echo "</div>
-		<div class='col-12 col-lg-4 d-flex flex-column justify-content-start'>
-		<img width='200px' src='https://web-tolk.ru/web_tolk_logo_wide.png'>
-		<p>Joomla Extensions</p>
-		<p class='btn-group'>
-			<a class='btn btn-sm btn-outline-primary' href='https://web-tolk.ru' target='_blank'>https://web-tolk.ru</a>
-			<a class='btn btn-sm btn-outline-primary' href='mailto:info@web-tolk.ru'><i class='icon-envelope'></i> info@web-tolk.ru</a>
-		</p>
-		<p><a class='btn btn-info' href='https://t.me/joomlaru' target='_blank'>Joomla Russian Community in Telegram</a></p>
-		
-		".Text::_($element."_MAYBE_INTERESTING")."
-		</div>
+			/**
+			 * Function called after the extension is uninstalled.
+			 *
+			 * @param   InstallerAdapter  $adapter  The adapter calling this method
+			 *
+			 * @return  boolean  True on success
+			 *
+			 * @since   1.0.0
+			 */
+			public function uninstall(InstallerAdapter $adapter): bool
+			{
+
+				return true;
+			}
+
+			/**
+			 * Function called after the extension is updated.
+			 *
+			 * @param   InstallerAdapter  $adapter  The adapter calling this method
+			 *
+			 * @return  boolean  True on success
+			 *
+			 * @since   1.0.0
+			 */
+			public function update(InstallerAdapter $adapter): bool
+			{
+
+				return true;
+
+			}
+
+			/**
+			 * Function called before extension installation/update/removal procedure commences.
+			 *
+			 * @param   string            $type     The type of change (install or discover_install, update, uninstall)
+			 * @param   InstallerAdapter  $adapter  The adapter calling this method
+			 *
+			 * @return  boolean  True on success
+			 *
+			 * @since   1.0.0
+			 */
+			public function preflight(string $type, InstallerAdapter $adapter): bool
+			{
+
+				$version = new Version();
+				if(!$version->isCompatible('5.0.0'))
+				{
+					$this->app->enqueueMessage('&#128546; <strong>WT Contact everywhere with fields</strong> package doesn\'t support Joomla versions <span class="alert-link">lower 5</span>. Your Joomla version is <span class="badge bg-danger">'.$version->getShortVersion().'</span>','error');
+					return false;
+				}
+
+				return true;
+
+			}
 
 
-		";		
-	
-    }
-}
+			/**
+			 * Function called after extension installation/update/removal procedure commences.
+			 *
+			 * @param   string            $type     The type of change (install or discover_install, update, uninstall)
+			 * @param   InstallerAdapter  $adapter  The adapter calling this method
+			 *
+			 * @return  boolean  True on success
+			 *
+			 * @since   1.0.0
+			 */
+			public function postflight(string $type, InstallerAdapter $adapter): bool
+			{
+
+				$smile = '';
+				if ($type != 'uninstall')
+				{
+					$smiles    = ['&#9786;', '&#128512;', '&#128521;', '&#128525;', '&#128526;', '&#128522;', '&#128591;'];
+					$smile_key = array_rand($smiles, 1);
+					$smile     = $smiles[$smile_key];
+				}
+
+				$element = strtoupper($adapter->getElement());
+				$type = strtoupper($type);
+				$html = '
+				<div class="row m-0">
+				<div class="col-12 col-md-8 p-0 pe-2">
+				<h2>'.$smile.' '.Text::_($element.'_AFTER_'.$type).' <br/>'.Text::_($element).'</h2>
+				'.Text::_($element.'_DESC');
+
+				$html .= Text::_($element.'_WHATS_NEW');
+
+				$html .= '</div>
+				<div class="col-12 col-md-4 p-0 d-flex flex-column justify-content-start">
+				<img width="180" src="https://web-tolk.ru/web_tolk_logo_wide.png">
+				<p>Joomla Extensions</p>
+				<p class="btn-group">
+					<a class="btn btn-sm btn-outline-primary" href="https://web-tolk.ru" target="_blank"> https://web-tolk.ru</a>
+					<a class="btn btn-sm btn-outline-primary" href="mailto:info@web-tolk.ru"><i class="icon-envelope"></i> info@web-tolk.ru</a>
+				</p>
+				<p><a class="btn btn-danger w-100" href="https://t.me/joomlaru" target="_blank">' . Text::_($element . '_JOOMLARU_TELEGRAM_CHAT') . '</a></p>
+				'.Text::_($element."_MAYBE_INTERESTING").'
+				</div>
+
+				';
+				$this->app->enqueueMessage($html, 'info');
+
+				return true;
+			}
+
+			/**
+			 * Enable plugin after installation.
+			 *
+			 * @param   InstallerAdapter  $adapter  Parent object calling object.
+			 *
+			 * @since  1.0.0
+			 */
+			protected function enablePlugin(InstallerAdapter $adapter)
+			{
+				// Prepare plugin object
+				$plugin          = new \stdClass();
+				$plugin->type    = 'plugin';
+				$plugin->element = $adapter->getElement();
+				$plugin->folder  = (string) $adapter->getParent()->manifest->attributes()['group'];
+				$plugin->enabled = 1;
+
+				// Update record
+				$this->db->updateObject('#__extensions', $plugin, ['type', 'element', 'folder']);
+			}
+
+		});
+	}
+};

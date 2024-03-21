@@ -1,11 +1,12 @@
 <?php
-
-/*
-*   Copyright (C) 2021  Sergey Tolkachyov
-*   Released under GNU GPL Public License
-*   License: http://www.gnu.org/copyleft/gpl.html
-*   https://web-tolk.ru
-*/
+/**
+ * @package       WT Articles anywhere with fields
+ * @version       2.0.1
+ * @Author        Sergey Tolkachyov, https://web-tolk.ru
+ * @copyright     Copyright (C) 2024 Sergey Tolkachyov
+ * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
+ * @since         1.0.0
+ */
 
 namespace Joomla\Plugin\Content\Wtarticlewithfields\Extension;
 
