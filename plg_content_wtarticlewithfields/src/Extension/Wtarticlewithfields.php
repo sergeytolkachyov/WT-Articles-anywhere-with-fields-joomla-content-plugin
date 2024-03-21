@@ -26,6 +26,7 @@ use Joomla\Database\ParameterType;
 final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 {
 	use DatabaseAwareTrait;
+
 	/**
 	 * If true, language files will be loaded automatically.
 	 *
@@ -53,17 +54,17 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 	/**
 	 * Plugin that change short code to article data with specified layout
 	 *
-	 * @param string $context The context of the content being passed to the plugin.
-	 * @param object &$article The article object.  Note $article->text is also available
-	 * @param mixed &$params The article params
-	 * @param integer $limitstart The 'page' number
+	 * @param   string   $context     The context of the content being passed to the plugin.
+	 * @param   object & $article     The article object.  Note $article->text is also available
+	 * @param   mixed &  $params      The article params
+	 * @param   integer  $limitstart  The 'page' number
 	 *
 	 * @return  void
 	 *
 	 * @since   1.6
 	 */
 
-	public function onContentPrepare(ContentPrepareEvent  $event)
+	public function onContentPrepare(ContentPrepareEvent $event)
 	{
 
 		// Don't run if in the API Application
@@ -74,7 +75,7 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 		}
 
 		// Get content item
-		$article    = $event->getItem();
+		$article = $event->getItem();
 
 		// If the item does not have a text property there is nothing to do
 		if (!property_exists($article, 'text'))
@@ -83,7 +84,8 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 		}
 
 		//Проверка есть ли строка замены в контенте
-		if (strpos($article->text, 'wt_article_wf') === false) {
+		if (strpos($article->text, 'wt_article_wf') === false)
+		{
 			return;
 		}
 
@@ -91,19 +93,22 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 		$regex = '/{wt_article_wf\s(.*?)}/i';
 		preg_match_all($regex, $article->text, $short_codes);
 
-		$i = 0;
+		$i                 = 0;
 		$short_code_params = [];
 
-		foreach ($short_codes[1] as $short_code) {
+		foreach ($short_codes[1] as $short_code)
+		{
 
 			$settings = explode(" ", $short_code);
 
-			foreach ($settings as $param) {
-				$param = explode("=", $param);
+			foreach ($settings as $param)
+			{
+				$param                        = explode("=", $param);
 				$short_code_params[$param[0]] = $param[1];
 
 			}
-			if (!empty($short_code_params["article_id"])) {
+			if (!empty($short_code_params["article_id"]))
+			{
 
 				$html = '';
 
@@ -111,28 +116,36 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 
 				try
 				{
-					$insert_article = $this->getArticle((int)$short_code_params["article_id"]);
+					$insert_article = $this->getArticle((int) $short_code_params["article_id"]);
 
-					if (!empty($insert_article)) {
+					if (!empty($insert_article))
+					{
 
 						$insert_article->jcfields = FieldsHelper::getFields("com_content.article", $insert_article, true);
-						$insert_article_sef_link = Route::_("index.php?option=com_content&view=article&id=" . $insert_article->id . "&catid=" . $insert_article->catid);
+						$insert_article_sef_link  = Route::_("index.php?option=com_content&view=article&id=" . $insert_article->id . "&catid=" . $insert_article->catid);
 						ob_start();
-						if (file_exists(JPATH_SITE . '/plugins/content/wtarticlewithfields/tmpl/' . $tmpl . '.php')) {
+						if (file_exists(JPATH_SITE . '/plugins/content/wtarticlewithfields/tmpl/' . $tmpl . '.php'))
+						{
 							require JPATH_SITE . '/plugins/content/wtarticlewithfields/tmpl/' . $tmpl . '.php';
-						} else {
+						}
+						else
+						{
 							require JPATH_SITE . '/plugins/content/wtarticlewithfields/tmpl/default.php';
 						}
 						$html = ob_get_clean();
 
 					}
-				} catch (Exception $e){
+				}
+				catch (Exception $e)
+				{
 
 				}
 
 				$article->text = str_replace($short_codes[0][$i], $html, $article->text);
 
-			} else {
+			}
+			else
+			{
 				return;
 			}
 			$i++;
@@ -144,15 +157,15 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 	 *  because native ArticleModel throws exception for unpublished articles.
 	 *  We return false for this case.
 	 *
-	 * @param   int  $pk article id
+	 * @param   int  $pk  article id
 	 *
 	 * @return bool|object
 	 *
 	 * @throws Exception
 	 * @since 2.0.1
-	 * @see \Joomla\Component\Content\Site\Model\ArticleModel
+	 * @see   \Joomla\Component\Content\Site\Model\ArticleModel
 	 */
-	private function getArticle(int $pk):bool|object
+	private function getArticle(int $pk): bool|object
 	{
 		$db    = $this->getDatabase();
 		$query = $db->getQuery(true);
@@ -234,7 +247,8 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 		if (
 			!$user->authorise('core.edit.state', 'com_content.article.' . $pk)
 			&& !$user->authorise('core.edit', 'com_content.article.' . $pk)
-		) {
+		)
+		{
 			// Filter by start and end dates.
 			$nowDate = Factory::getDate()->toSql();
 
@@ -261,11 +275,13 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 
 		$data = $db->loadObject();
 
-		if (empty($data)) {
+		if (empty($data))
+		{
 			return false;
 		}
 		// Check for published state if filter set.
-		if ($data->state != 1) {
+		if ($data->state != 1)
+		{
 			return false;
 		}
 
@@ -281,34 +297,45 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 		$data->metadata = new Registry($data->metadata);
 
 		// Technically guest could edit an article, but lets not check that to improve performance a little.
-		if (!$user->get('guest')) {
+		if (!$user->get('guest'))
+		{
 			$userId = $user->get('id');
 			$asset  = 'com_content.article.' . $data->id;
 
 			// Check general edit permission first.
-			if ($user->authorise('core.edit', $asset)) {
+			if ($user->authorise('core.edit', $asset))
+			{
 				$data->params->set('access-edit', true);
-			} elseif (!empty($userId) && $user->authorise('core.edit.own', $asset)) {
+			}
+			elseif (!empty($userId) && $user->authorise('core.edit.own', $asset))
+			{
 				// Now check if edit.own is available.
 				// Check for a valid user and that they are the owner.
-				if ($userId == $data->created_by) {
+				if ($userId == $data->created_by)
+				{
 					$data->params->set('access-edit', true);
 				}
 			}
 		}
 
 		// Compute view access permissions.
-		if ($access = $data->params->get('filter.access')) {
+		if ($access = $data->params->get('filter.access'))
+		{
 			// If the access filter has been set, we already know this user can view.
 			$data->params->set('access-view', true);
-		} else {
+		}
+		else
+		{
 			// If no access filter is set, the layout takes some responsibility for display of limited information.
 			$user   = $this->getApplication()->getIdentity();
 			$groups = $user->getAuthorisedViewLevels();
 
-			if ($data->catid == 0 || $data->category_access === null) {
+			if ($data->catid == 0 || $data->category_access === null)
+			{
 				$data->params->set('access-view', \in_array($data->access, $groups));
-			} else {
+			}
+			else
+			{
 				$data->params->set('access-view', \in_array($data->access, $groups) && \in_array($data->category_access, $groups));
 			}
 		}
