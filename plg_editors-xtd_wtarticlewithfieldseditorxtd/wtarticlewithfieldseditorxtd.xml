@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 3</license>
 	<authorEmail>info@web-tolk.ru</authorEmail>
 	<authorUrl>https://web-tolk.ru</authorUrl>
-	<version>2.0.1</version>
+	<version>2.0.2</version>
 	<description>PLG_WTARTICLEWITHFIELDSEDITORXTD_DESC</description>
 	<namespace path="src">Joomla\Plugin\EditorsXtd\Wtarticlewithfieldseditorxtd</namespace>
 	<media folder="media" destination="plg_editors-xtd_wtarticlewithfieldseditorxtd">
