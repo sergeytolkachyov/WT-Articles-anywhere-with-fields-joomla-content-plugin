@@ -135,7 +135,7 @@ return new class () implements ServiceProviderInterface {
 				$version = new Version();
 				if(!$version->isCompatible('5.0.0'))
 				{
-					$this->app->enqueueMessage('&#128546; <strong>WT Contact everywhere with fields</strong> package doesn\'t support Joomla versions <span class="alert-link">lower 5</span>. Your Joomla version is <span class="badge bg-danger">'.$version->getShortVersion().'</span>','error');
+					$this->app->enqueueMessage('&#128546; <strong>WT Articles anywhere with fields</strong> package doesn\'t support Joomla versions <span class="alert-link">lower 5</span>. Your Joomla version is <span class="badge bg-danger">'.$version->getShortVersion().'</span>','error');
 					return false;
 				}
 
