@@ -289,9 +289,6 @@ final class Wtarticlewithfields extends CMSPlugin implements SubscriberInterface
 		// Convert parameter fields to objects.
 		$registry = new Registry($data->attribs);
 
-		var_dump(Factory::getApplication()->getParams());
-
-
 		$data->params = clone $this->getApplication()->getParams();
 		$data->params->merge($registry);
 
