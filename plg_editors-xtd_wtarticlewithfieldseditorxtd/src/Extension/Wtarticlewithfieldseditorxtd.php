@@ -1,167 +1,197 @@
 <?php
 /**
- * @package       WT Articles anywhere with fields
- * @version       2.0.2
+ * @package    WT Articles anywhere with fields
+ * @version       2.0.3
  * @Author        Sergey Tolkachyov, https://web-tolk.ru
  * @copyright     Copyright (C) 2024 Sergey Tolkachyov
  * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
  * @since         1.0.0
  */
+
 namespace Joomla\Plugin\EditorsXtd\Wtarticlewithfieldseditorxtd\Extension;
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
-use Joomla\CMS\Filesystem\File;
-use Joomla\CMS\Filesystem\Folder;
+use Joomla\CMS\Editor\Button\Button;
+use Joomla\CMS\Event\Editor\EditorButtonsSetupEvent;
+use Joomla\CMS\Event\Plugin\AjaxEvent;
+use Joomla\Event\SubscriberInterface;
+use Joomla\Filesystem\File;
+use Joomla\Filesystem\Folder;
 use Joomla\CMS\Plugin\CMSPlugin;
-use Joomla\CMS\Object\CMSObject;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Session\Session;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 
 /**
- * Editor Article button
+ * Editor WT Articles with fields button
  *
  * @since  1.5
  */
-final class Wtarticlewithfieldseditorxtd extends CMSPlugin
+final class Wtarticlewithfieldseditorxtd extends CMSPlugin implements SubscriberInterface
 {
-    /**
-     * Load the language file on instantiation.
-     *
-     * @var    boolean
-     * @since  3.1
-     */
-    protected $autoloadLanguage = true;
+	/**
+	 * Returns an array of events this subscriber will listen to.
+	 *
+	 * @return array
+	 *
+	 * @since   5.0.0
+	 */
+	public static function getSubscribedEvents(): array
+	{
+		return [
+			'onEditorButtonsSetup' => 'onEditorButtonsSetup',
+			'onAjaxWtarticlewithfieldseditorxtd' => 'onAjaxWtarticlewithfieldseditorxtd',
+		];
+	}
 
-    /**
-     * Display the button
-     *
-     * @param string $name The name of the button to add
-     *
-     * @return  CMSObject  The button options as JObject
-     *
-     * @since   1.5
-     */
-    public function onDisplay($name)
-    {
+	/**
+	 * @param   EditorButtonsSetupEvent  $event
+	 *
+	 * @return void
+	 *
+	 * @since   5.0.0
+	 */
+	public function onEditorButtonsSetup(EditorButtonsSetupEvent $event): void
+	{
+		$subject  = $event->getButtonsRegistry();
+		$disabled = $event->getDisabledButtons();
+		$app      = $this->getApplication();
 
+		if (\in_array('wtarticlewithfieldseditorxtd', $disabled))
+		{
+			return;
+		}
 
-        if (!empty(PluginHelper::getPlugin('content', 'wtarticlewithfields'))) {
-            $app = $this->getApplication();
-            if (!$app->isClient('administrator')) {
-                return;
-            }
+		if (empty(PluginHelper::getPlugin('content', 'wtarticlewithfields')))
+		{
+			return;
+		}
 
-            $user = $app->getIdentity();
+		if (!$app->isClient('administrator'))
+		{
+			return;
+		}
 
-            // Can create in any category (component permission) or at least in one category
-            $canCreateRecords = $user->authorise('core.create', 'com_content')
-                || count($user->getAuthorisedCategories('com_content', 'core.create')) > 0;
+		$this->loadLanguage();
+		$user = $app->getIdentity();
 
-            // Instead of checking edit on all records, we can use **same** check as the form editing view
-            $values = (array)Factory::getApplication()->getUserState('com_content.edit.article.id');
-            $isEditingRecords = count($values);
+		// Can create in any category (component permission) or at least in one category
+		$canCreateRecords = $user->authorise('core.create', 'com_content')
+			|| count($user->getAuthorisedCategories('com_content', 'core.create')) > 0;
 
-            // This ACL check is probably a double-check (form view already performed checks)
-            $hasAccess = $canCreateRecords || $isEditingRecords;
-            if (!$hasAccess) {
-                return;
-            }
+		// Instead of checking edit on all records, we can use **same** check as the form editing view
+		$values           = (array) $app->getUserState('com_content.edit.article.id');
+		$isEditingRecords = count($values);
 
-            $link = 'index.php?option=com_ajax&amp;plugin=wtarticlewithfieldseditorxtd&amp;group=editors-xtd&amp;format=html&amp;tmpl=component&amp;' . Session::getFormToken() . '=1&amp;editor=' . $name;
+		// This ACL check is probably a double-check (form view already performed checks)
+		$hasAccess = $canCreateRecords || $isEditingRecords;
+		if (!$hasAccess)
+		{
+			return;
+		}
 
-            $button = new CMSObject;
-            $button->modal = true;
-            $button->class = 'btn';
-            $button->link = $link;
-            $button->text = '{wt_article_wf}';
-            $button->name = 'file-add';
-            $button->options = [
-                'height' => '400px',
-                'width' => '800px',
-                'modalWidth' => '90',
-            ];
+		$link = 'index.php?option=com_ajax&plugin=wtarticlewithfieldseditorxtd&group=editors-xtd&format=html&tmpl=component&' . Session::getFormToken() . '=1&editor=' . $event->getEditorId();
 
-            return $button;
-        }
+		$button = new Button(
+			'wtarticlewithfieldseditorxtd',
+			[
+				'action'     => 'modal',
+				'link'       => $link,
+				'text'       => '{wt_article_wf}',
+				'icon'       => 'file-add',
+				'height'     => '400px',
+				'width'      => '800px',
+				'modalWidth' => '90',
+				'name'       => 'editors-xtd_wtarticlewithfieldseditorxtd',
+			]
+		);
 
-        return;
-    }
-
-    /**
-     * Method working with Joomla com_ajax. Return a HTML form for product selection
-     * @return string product selection HTML form
-     * @throws Exception
-     */
-    public function onAjaxWtarticlewithfieldseditorxtd()
-    {
-        $app = $this->getApplication();
-
-        if ($app->isClient('site')) {
-            Session::checkToken('get') or die(Text::_('JINVALID_TOKEN'));
-        }
-
-        $doc = $app->getDocument();
-        $doc->getWebAssetManager()
-            ->useScript('core')
-            ->registerAndUseScript(
-                'wtarticlewithfieldseditorxtd', 'plg_editors-xtd_wtarticlewithfieldseditorxtd/wtarticlewithfieldseditorxtd.js'
-            );
-
-        $editor = $app->getInput()->get('editor', '');
-        $wt_wtarticlewithfieldseditorxtd = Folder::files(JPATH_SITE . "/plugins/content/wtarticlewithfields/tmpl");
-        $layout_options = array();
-        foreach ($wt_wtarticlewithfieldseditorxtd as $file) {
-            if (File::getExt($file) == "php") {
-                $wt_layout = File::stripExt($file);
-                $layout_options[] = HTMLHelper::_('select.option', $wt_layout, $wt_layout);
-            }
-        }
-
-        if (!empty($editor)) {
-
-            $doc->addScriptOptions('xtd-wtarticlewithfieldseditorxtd', array('editor' => $editor));
-        }
-
-        $context = 'com_content.articles';
-
-        $limit = $app->getInput()->get('limit', $app->get('list_limit'), 'int');
+		if ($button)
+		{
+			$subject->add($button);
+		}
+	}
 
 
-        $limitstart = $app->getInput()->get('limitstart', 0, 'int');
+	/**
+	 * Method working with Joomla com_ajax. Return a HTML form for product selection
+	 * @return string product selection HTML form
+	 * @throws \Exception
+	 */
+	public function onAjaxWtarticlewithfieldseditorxtd(AjaxEvent $event): void
+	{
+		$app = $this->getApplication();
 
-        $articles_model = $app->bootComponent('com_content')->getMVCFactory()->createModel('Articles', 'Administrator', ['ignore_request' => true]);
+		if ($app->isClient('site'))
+		{
+			Session::checkToken('get') or die(Text::_('JINVALID_TOKEN'));
+		}
 
-        $articles_model->setState('context', $context);
-        $articles_model->setState('list.start', $limitstart);
-        $articles_model->setState('list.limit', $limit);
-        $articles_model->setState('list.direction', 'asc');
+		$doc = $app->getDocument();
+		$doc->getWebAssetManager()
+			->useScript('core')
+			->registerAndUseScript(
+				'wtarticlewithfieldseditorxtd', 'plg_editors-xtd_wtarticlewithfieldseditorxtd/wtarticlewithfieldseditorxtd.js'
+			);
 
-        $filter = $app->getInput()->get('filter', [], 'array');
-        $filter_search = (!empty($filter['search'])) ? $filter['search'] : '';
-        $articles_model->setState('filter.search', $filter_search);
+		$editor                          = $app->getInput()->get('editor', '');
+		$wt_wtarticlewithfieldseditorxtd = Folder::files(JPATH_SITE . "/plugins/content/wtarticlewithfields/tmpl");
+		$layout_options                  = [];
+		foreach ($wt_wtarticlewithfieldseditorxtd as $file)
+		{
+			if (File::getExt($file) == "php")
+			{
+				$wt_layout        = File::stripExt($file);
+				$layout_options[] = HTMLHelper::_('select.option', $wt_layout, $wt_layout);
+			}
+		}
 
-        $filter_category_id = $app->getInput()->get('category_id', 0, 'int');
-        $articles_model->setState('filter.category_id', $filter_category_id);
+		if (!empty($editor))
+		{
 
-        // Поле категорий
-        $options = HTMLHelper::_('category.options', 'com_content', $config = ['filter.published' => [0, 1]]);
-        $category_filed = HTMLHelper::_('select.genericlist',
-            $options,
-            'category_id',
-            ['class' => 'form-select', 'onchange' => 'Joomla.submitform();return false;'],
-            'value',
-            'text',
-            $filter_category_id,
-            'category_id',
-            true);
+			$doc->addScriptOptions('xtd-wtarticlewithfieldseditorxtd', ['editor' => $editor]);
+		}
 
-        $articles = $articles_model->getItems();
+		$context = 'com_content.articles';
 
-        ?>
+		$limit = $app->getInput()->get('limit', $app->get('list_limit'), 'int');
+
+
+		$limitstart = $app->getInput()->get('limitstart', 0, 'int');
+
+		$articles_model = $app->bootComponent('com_content')
+			->getMVCFactory()
+			->createModel('Articles', 'Administrator', ['ignore_request' => true]);
+
+		$articles_model->setState('context', $context);
+		$articles_model->setState('list.start', $limitstart);
+		$articles_model->setState('list.limit', $limit);
+		$articles_model->setState('list.direction', 'asc');
+
+		$filter        = $app->getInput()->get('filter', [], 'array');
+		$filter_search = (!empty($filter['search'])) ? $filter['search'] : '';
+		$articles_model->setState('filter.search', $filter_search);
+
+		$filter_category_id = $app->getInput()->get('category_id', 0, 'int');
+		$articles_model->setState('filter.category_id', $filter_category_id);
+
+		// Поле категорий
+		$options        = HTMLHelper::_('category.options', 'com_content', $config = ['filter.published' => [0, 1]]);
+		$category_filed = HTMLHelper::_('select.genericlist',
+			$options,
+			'category_id',
+			['class' => 'form-select', 'onchange' => 'Joomla.submitform();return false;'],
+			'value',
+			'text',
+			$filter_category_id,
+			'category_id',
+			true);
+
+		$articles = $articles_model->getItems();
+
+		?>
         <form
                 action="index.php?option=com_ajax&plugin=wtarticlewithfieldseditorxtd&group=editors-xtd&format=html&tmpl=component&<?php echo Session::getFormToken(); ?>=1&editor=<?php echo $editor; ?>"
                 method="post"
@@ -182,33 +212,34 @@ final class Wtarticlewithfieldseditorxtd extends CMSPlugin
                         <label for="wtarticlewithfieldseditorxtd_layout" class="input-group-text">
                             <strong>tmpl</strong>
                         </label>
-                        <?php
-                        $attribs = [
-                            'class' => 'form-select',
-                            'aria-label' => 'Choose layout'
-                        ];
+						<?php
+						$attribs = [
+							'class'      => 'form-select',
+							'aria-label' => 'Choose layout'
+						];
 
-                        echo HTMLHelper::_("select.genericlist", $layout_options, $name = "wtarticlewithfieldseditorxtd_layout", $attribs, $key = 'value', $text = 'text', $selected = "default");
+						echo HTMLHelper::_("select.genericlist", $layout_options, $name = "wtarticlewithfieldseditorxtd_layout", $attribs, $key = 'value', $text = 'text', $selected = "default");
 
-                        ?>
+						?>
                     </div>
 
                 </div>
 
                 <div class="col-2">
-                    <?php echo $articles_model->getPagination()->getLimitBox(); ?>
+					<?php echo $articles_model->getPagination()->getLimitBox(); ?>
                 </div>
                 <div class="col-3">
-                    <?php echo $category_filed; ?>
+					<?php echo $category_filed; ?>
                 </div>
                 <div class="col-6 col-md-4">
                     <div class="input-group mb-3">
                         <input class="form-control" id="filter_search" type="text" name="filter[search]"
-                            <?php
-                            if (!empty($filter_search)) {
-                                echo 'value="' . $filter_search . '"';
-                            }
-                            ?>
+							<?php
+							if (!empty($filter_search))
+							{
+								echo 'value="' . $filter_search . '"';
+							}
+							?>
                         />
                         <button class="btn btn-primary" type="submit"><i class="icon-search"></i></button>
                         <button class="btn btn-danger filter-search-actions__button js-stools-btn-clear" type="button"
@@ -225,19 +256,20 @@ final class Wtarticlewithfieldseditorxtd extends CMSPlugin
                 </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($articles as $article): ?>
+				<?php foreach ($articles as $article): ?>
                     <tr>
                         <td><?php echo $article->id; ?></td>
-                        <td><a href="#" data-article-id="<?php echo $article->id; ?>"><?php echo $article->title; ?></a></td>
+                        <td><a href="#" data-article-id="<?php echo $article->id; ?>"><?php echo $article->title; ?></a>
+                        </td>
                     </tr>
-                <?php endforeach; ?>
+				<?php endforeach; ?>
 
 
                 </tbody>
                 <tfoot>
                 <tr>
                     <td colspan="2">
-                        <?php echo $articles_model->getPagination()->getListFooter(); ?>
+						<?php echo $articles_model->getPagination()->getListFooter(); ?>
                     </td>
                 </tr>
                 </tfoot>
@@ -265,7 +297,9 @@ final class Wtarticlewithfieldseditorxtd extends CMSPlugin
                     </span>
             </div>
         </div>
-        </div>
-        <?php
-    }
+
+		<?php
+
+
+	}
 }

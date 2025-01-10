@@ -1,7 +1,7 @@
 <?php
 /**
- * @package       WT Articles anywhere with fields
- * @version       2.0.2
+ * @package    WT Articles anywhere with fields
+ * @version       2.0.3
  * @Author        Sergey Tolkachyov, https://web-tolk.ru
  * @copyright     Copyright (C) 2024 Sergey Tolkachyov
  * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
@@ -131,11 +131,9 @@ return new class () implements ServiceProviderInterface {
 			 */
 			public function preflight(string $type, InstallerAdapter $adapter): bool
 			{
-
-				$version = new Version();
-				if(!$version->isCompatible('5.0.0'))
+				// Check compatible
+				if (!$this->checkCompatible($adapter->getElement()))
 				{
-					$this->app->enqueueMessage('&#128546; <strong>WT Articles anywhere with fields</strong> package doesn\'t support Joomla versions <span class="alert-link">lower 5</span>. Your Joomla version is <span class="badge bg-danger">'.$version->getShortVersion().'</span>','error');
 					return false;
 				}
 
@@ -166,14 +164,14 @@ return new class () implements ServiceProviderInterface {
 				}
 
 				$element = strtoupper($adapter->getElement());
-				$type = strtoupper($type);
-				$html = '
+				$type    = strtoupper($type);
+				$html    = '
 				<div class="row m-0">
 				<div class="col-12 col-md-8 p-0 pe-2">
-				<h2>'.$smile.' '.Text::_($element.'_AFTER_'.$type).' <br/>'.Text::_($element).'</h2>
-				'.Text::_($element.'_DESC');
+				<h2>' . $smile . ' ' . Text::_($element . '_AFTER_' . $type) . ' <br/>' . Text::_($element) . '</h2>
+				' . Text::_($element . '_DESC');
 
-				$html .= Text::_($element.'_WHATS_NEW');
+				$html .= Text::_($element . '_WHATS_NEW');
 
 				$html .= '</div>
 				<div class="col-12 col-md-4 p-0 d-flex flex-column justify-content-start">
@@ -183,8 +181,11 @@ return new class () implements ServiceProviderInterface {
 					<a class="btn btn-sm btn-outline-primary" href="https://web-tolk.ru" target="_blank"> https://web-tolk.ru</a>
 					<a class="btn btn-sm btn-outline-primary" href="mailto:info@web-tolk.ru"><i class="icon-envelope"></i> info@web-tolk.ru</a>
 				</p>
-				<p><a class="btn btn-danger w-100" href="https://t.me/joomlaru" target="_blank">' . Text::_($element . '_JOOMLARU_TELEGRAM_CHAT') . '</a></p>
-				'.Text::_($element."_MAYBE_INTERESTING").'
+				<div class="btn-group-vertical mb-3 web-tolk-btn-links" role="group" aria-label="Joomla community links">
+				<a class="btn btn-danger text-white w-100" href="https://t.me/joomlaru" target="_blank">' . Text::_($element . '_JOOMLARU_TELEGRAM_CHAT') . '</a>
+				<a class="btn btn-primary text-white w-100" href="https://t.me/webtolkru" target="_blank">' . Text::_($element . '_WEBTOLK_TELEGRAM_CHANNEL') . '</a>
+				</div>
+				' . Text::_($element . "_MAYBE_INTERESTING") . '
 				</div>
 
 				';
@@ -211,6 +212,43 @@ return new class () implements ServiceProviderInterface {
 
 				// Update record
 				$this->db->updateObject('#__extensions', $plugin, ['type', 'element', 'folder']);
+			}
+
+			/**
+			 * Method to check compatible.
+			 *
+			 * @return  boolean True on success, False on failure.
+			 *
+			 * @throws  Exception
+			 *
+			 * @since  1.0.0
+			 */
+			protected function checkCompatible(string $element): bool
+			{
+				$element = strtoupper($element);
+				// Check joomla version
+				if (!(new Version)->isCompatible($this->minimumJoomla))
+				{
+					$this->app->enqueueMessage(
+						Text::sprintf($element . '_ERROR_COMPATIBLE_JOOMLA', $this->minimumJoomla),
+						'error'
+					);
+
+					return false;
+				}
+
+				// Check PHP
+				if (!(version_compare(PHP_VERSION, $this->minimumPhp) >= 0))
+				{
+					$this->app->enqueueMessage(
+						Text::sprintf($element . '_ERROR_COMPATIBLE_PHP', $this->minimumPhp),
+						'error'
+					);
+
+					return false;
+				}
+
+				return true;
 			}
 
 		});

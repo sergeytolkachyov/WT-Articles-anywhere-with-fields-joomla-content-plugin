@@ -1,7 +1,7 @@
 <?php
 /**
- * @package       WT Articles anywhere with fields
- * @version       2.0.2
+ * @package    WT Articles anywhere with fields
+ * @version       2.0.3
  * @Author        Sergey Tolkachyov, https://web-tolk.ru
  * @copyright     Copyright (C) 2024 Sergey Tolkachyov
  * @license       GNU/GPL http://www.gnu.org/licenses/gpl-3.0.html
@@ -39,56 +39,49 @@ class PlugininfoField extends NoteField
 	 *
 	 * @since   1.7.0
 	 */
-	protected function getLabel()
+	protected function getLabel(): string
 	{
+		$data           = $this->form->getData();
+		$element        = $data->get('element');
+		$folder         = $data->get('folder');
+		$wt_plugin_info = simplexml_load_file(JPATH_SITE . "/plugins/" . $folder . "/" . $element . "/" . $element . ".xml");
 
-		$data = $this->form->getData();
-		$element = 	$data->get('element');
-		$folder = 	$data->get('folder');
-
-
+		/* @var $doc \Joomla\CMS\Document\Document */
 		$doc = Factory::getApplication()->getDocument();
-		$doc->addStyleDeclaration("
-			.wt-b24-plugin-info{
-				box-shadow: 0 .5rem 1rem rgba(0,0,0,.15); 
-				padding:1rem; 
-				margin-bottom: 2rem;
-				display:flex;
-				
+		$doc->getWebAssetManager()->addInlineStyle('
+            #web_tolk_link {
+			text-align: center;
 			}
-			.plugin-info-img{
-			    margin-right:auto;
-			    max-width: 100%;
+			#web_tolk_link::before{
+				content: "";
 			}
-			.plugin-info-img svg:hover * {
-				cursor:pointer;
-			}
-		");
+        ');
 
-		$wt_plugin_info = simplexml_load_file(JPATH_SITE."/plugins/".$folder."/".$element."/".$element.".xml");
-
-
-
-		?>
-		<div class="wt-b24-plugin-info">
-			<div class="plugin-info-img span2 col-2">
-				<a href="https://web-tolk.ru" target="_blank">
-					<svg width="200" height="50" xmlns="http://www.w3.org/2000/svg">
-						<g>
-							<title>Go to https://web-tolk.ru</title>
-							<text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="32" id="svg_3" y="36.085949" x="8.152073" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#0fa2e6">Web</text>
-							<text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="32" id="svg_4" y="36.081862" x="74.239105" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#384148">Tolk</text>
-						</g>
-					</svg>
+		return '</div>
+		<div class="card container shadow-sm w-100 p-0">
+			<div class="wt-b24-plugin-info row">
+				<div class="col-2 d-flex justify-content-center align-items-center">
+					<a href="https://web-tolk.ru" target="_blank" id="web_tolk_link" title="Go to https://web-tolk.ru">
+							<svg width="200" height="50" viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
+								 <g>
+								  <title>Go to https://web-tolk.ru</title>
+								  <text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="32" id="svg_3" y="36.085949" x="8.152073" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#0fa2e6">Web</text>
+								  <text font-weight="bold" xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="32" id="svg_4" y="36.081862" x="74.239105" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#384148">Tolk</text>
+								 </g>
+							</svg>
 				</a>
+				</div>
+				<div class="col-10">
+					<div class="card-header bg-white p-1">
+						<span class="badge bg-success">v.' . $wt_plugin_info->version . '</span>
+					</div>
+					<div class="card-body">
+						' . Text::_("PLG_" . strtoupper($element) . "_DESC") . '
+					</div>
+				</div>
 			</div>
-			<div style="padding: 0px 15px;" class="span10 col-10">
-				<span class="badge badge-success bg-success">v.<?php echo $wt_plugin_info->version; ?></span>
-				<?php echo Text::_("PLG_".strtoupper($element)."_DESC"); ?>
-			</div>
-		</div>
-		<?php
-
+		</div><div>
+		';
 	}
 
 	/**
